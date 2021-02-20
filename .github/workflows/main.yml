@@ -1,0 +1,71 @@
+name: Build
+# This workflow will build, test and release our CLI
+
+# we only run this workflow on the master (release) branch for both commits and PRs
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  # we start with the build job
+  Build:
+    runs-on: ubuntu-latest
+    name: Build
+
+    strategy:
+      matrix:
+        # building on nodejs LTS
+        node-version: [12.x, 14.x]
+    steps:
+      - uses: actions/checkout@v2
+      - name: building on Node.js ${{ matrix.node-version }} 🛠️
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: yarn
+      - run: yarn build
+        env:
+            CI: true
+  Test:
+    runs-on: ubuntu-latest
+    name: Test
+    strategy:
+      matrix:
+        # building on nodejs LTS
+        node-version: [12.x, 14.x]
+    steps:
+     - uses: actions/checkout@v2
+     - name: Running Tests 🧪
+       uses: actions/setup-node@v1
+       with:
+          node-version: ${{ matrix.node-version }}
+     - run: yarn
+     - run: yarn test
+     - name: Upload coverage to Codecov
+       uses: codecov/codecov-action@v1
+       with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./tests/unit/coverage
+  # we release if everything is fine
+  Release:
+    runs-on: ubuntu-latest
+    name: Release
+    needs: Test
+    if: github.event_name == 'push'
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - run: yarn
+      - run: yarn build
+      - name: Preparing a release 🚀
+        uses: cycjimmy/semantic-release-action@v2
+        with:
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+          node-version: 14.x
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
