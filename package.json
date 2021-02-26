@@ -1,7 +1,7 @@
 {
-  "name": "typescript-starter",
+  "name": "prayers.ts",
   "version": "0.0.0-development",
-  "description": "Typescript Starter kit to quickly start developing",
+  "description": "A reactive prayer time and qibla calculation library",
   "keywords": [
     "typescript",
     "starter-kit"
@@ -25,7 +25,9 @@
     "validate": "npm-run-all --parallel lint test",
     "report-coverage": "cat ./tests/unit/coverage/lcov.info | codecov",
     "travis-deploy-once": "travis-deploy-once",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs"
   },
   "author": "gimyboya <amine@grainer.io>",
   "contributors": [
@@ -36,6 +38,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "adhan": "^4.0.1",
     "lodash": "^4.17.10",
     "rxjs": "^6.2.1"
   },
@@ -60,7 +63,8 @@
     "ts-jest": "^26.5.1",
     "ts-node-dev": "^1.1.1",
     "typescript": "^4.1.5",
-    "validate-commit-msg": "^2.14.0"
+    "validate-commit-msg": "^2.14.0",
+    "vuepress": "^1.8.2"
   },
   "files": [
     "dist"
