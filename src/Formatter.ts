@@ -1,13 +1,15 @@
-import { FormattedTimeObject, RawTimeObject } from 'TimeObject';
+import { FormattedTimeObject } from 'TimeObject';
 import { FormatterConfig } from './types/FormatterConfig';
 
 export class Formatter {
   private _formatter!: Intl.DateTimeFormat;
+  private _config!: FormatterConfig;
 
   constructor(config?: FormatterConfig) {
     // date formatter initialization
     if (config) {
       // TODO: pull the timezone from coordinates
+      this._config = config;
       const { locale, ...options } = config;
       this._formatter = new Intl.DateTimeFormat(
         locale || 'en-US',
@@ -19,12 +21,15 @@ export class Formatter {
         }
       );
     } else {
-      this._formatter = new Intl.DateTimeFormat('en-US', {
+      this._config = {
+        locale: 'en-US',
         // timeZone,
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
-      });
+      };
+      const { locale, ...options } = this._config;
+      this._formatter = new Intl.DateTimeFormat(locale, options);
     }
   }
 
@@ -35,5 +40,19 @@ export class Formatter {
       (key) => (formattedTimeObject[key] = this._formatter.format(formattedTimeObject[key]))
     );
     return formattedTimeObject;
+  }
+
+  public setFormatterOptions(newConfig: Partial<FormatterConfig>) {
+    // TODO: pull the timezone from coordinates
+    const { locale, ...options } = newConfig;
+    this._formatter = new Intl.DateTimeFormat(
+      locale || 'en-US',
+      options || {
+        // timeZone,
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }
+    );
   }
 }
