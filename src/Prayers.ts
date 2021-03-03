@@ -11,6 +11,7 @@ import { AsrTime } from './types/AsrTime';
 import { Methods } from './types/Methods';
 import { CalculationsConfig, CustomMethod } from 'CalculationsConfig';
 import { RawTimeObject } from './types/TimeObject';
+import { Observable, defer } from 'rxjs';
 
 export class PrayerTimesCalculator {
   // TODO: add a proxy to the config to detect changes and react
@@ -78,8 +79,8 @@ export class PrayerTimesCalculator {
     const calculationParams = new CalculationParameters(
       config.fajrAngle || 18,
       config.ishaAngle || 18,
-      config.ishaInterval || 0,
-      'Other'
+      'Other',
+      config.ishaInterval || 0
     );
     if (config.methodAdjustments) {
       // assigning method adjustments
@@ -117,12 +118,12 @@ export class PrayerTimesCalculator {
 
   public getAllPrayerTimes(): RawTimeObject {
     return {
-      fajr: this._prayerTimesCalculator.fajr,
-      sunrise: this._prayerTimesCalculator.sunrise,
-      dhuhr: this._prayerTimesCalculator.dhuhr,
-      asr: this._prayerTimesCalculator.asr,
-      maghrib: this._prayerTimesCalculator.maghrib,
-      isha: this._prayerTimesCalculator.isha,
+      [Prayer.Fajr]: this._prayerTimesCalculator.fajr,
+      [Prayer.Sunrise]: this._prayerTimesCalculator.sunrise,
+      [Prayer.Dhuhr]: this._prayerTimesCalculator.dhuhr,
+      [Prayer.Asr]: this._prayerTimesCalculator.asr,
+      [Prayer.Maghrib]: this._prayerTimesCalculator.maghrib,
+      [Prayer.Isha]: this._prayerTimesCalculator.isha,
     };
   }
 
@@ -130,9 +131,47 @@ export class PrayerTimesCalculator {
     return { [prayer]: this._prayerTimesCalculator.timeForPrayer(prayer) };
   }
 
-  // setCalculationOptions()
-  // setFormatterOptions()
-  // setDate
-  // getPrayerTimes
+  public getCalculationOptions(): CalculationsConfig {
+    return this._config;
+  }
+
+  public setCalculationOptions(newConfig: Partial<CalculationsConfig>) {
+    this._config = Object.assign(this._config, newConfig);
+    this._initializer(this._config);
+  }
+
   // ListenToAdhan (all prayers)
+
+  public listenToAdhan(): Observable<any> {
+    const prayerTimes = this.getAllPrayerTimes();
+    // we use defer to trigger the observable creation (factory) at subscription time
+    return defer(() => {
+      return new Observable((subscriber) => {
+        let tooLate = true;
+        const prayerTimesKeys = Object.keys(prayerTimes);
+        const timeAtSubscription = new Date();
+        console.log('subscribing at:', timeAtSubscription.getTime());
+        prayerTimesKeys.forEach((prayer, i) => {
+          // calculate the delay needed to issue an prayer event starting from now
+          const delay = prayerTimes[prayer].getTime() - timeAtSubscription.getTime();
+          // if the delay is positive (in the future)
+          console.log(`delay for ${prayer} is: ${delay}`);
+          if (delay >= 0) {
+            tooLate = false;
+            // we create an event of the the prayer based on the delay
+            setTimeout(() => {
+              subscriber.next(prayer);
+              // if it's the last prayer we complete
+              if (prayer === 'isha') subscriber.complete();
+            }, delay);
+          }
+
+          if (tooLate && i === prayerTimesKeys.length) {
+            subscriber.next(Prayer.None);
+            subscriber.complete();
+          }
+        });
+      });
+    });
+  }
 }
