@@ -77,6 +77,11 @@ export class PrayerTimesCalculator {
     // assign polarCircleResolution
     calculationParams.polarCircleResolution =
       paramsOptions.polarCircleResolution || PolarCircleResolution.Unresolved;
+    // assign iqama calculation times
+    this._config.iqama = Object.assign(
+      { fajr: 20, dhuhr: 10, asr: 10, maghrib: 5, isha: 15 },
+      paramsOptions.iqama
+    );
     // creating the calculation object
     this._prayerTimesCalculator = new PrayerTimes(coordinates, date, calculationParams);
   }
@@ -174,6 +179,40 @@ export class PrayerTimesCalculator {
 
           if (tooLate && i === prayerTimesKeys.length - 1) {
             subscriber.next(Prayer.None);
+            subscriber.complete();
+          }
+        });
+      });
+    });
+  }
+
+  public listenToIqama(): Observable<any> {
+    const prayerTimes = this.getAllPrayerTimes();
+    // we use defer to trigger the observable creation (factory) at subscription time
+    return defer(() => {
+      return new Observable((subscriber) => {
+        let tooLate = true;
+        const prayerTimesKeys = Object.keys(prayerTimes);
+        const timeAtSubscription = new Date();
+        prayerTimesKeys.forEach((prayer, i) => {
+          // calculate the delay needed to issue an prayer event starting from now
+          const delay =
+            prayerTimes[prayer].getTime() +
+            this._config.iqama![prayer] * 60000 -
+            timeAtSubscription.getTime();
+          // if the delay is positive (in the future)
+          if (delay >= 0) {
+            tooLate = false;
+            // we create an event of the the prayer based on the delay
+            setTimeout(() => {
+              subscriber.next(`iqama:${prayer}`);
+              // if it's the last prayer we complete
+              if (prayer === 'isha') subscriber.complete();
+            }, delay);
+          }
+
+          if (tooLate && i === prayerTimesKeys.length - 1) {
+            subscriber.next(`iqama:${Prayer.None}`);
             subscriber.complete();
           }
         });

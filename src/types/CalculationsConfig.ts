@@ -1,4 +1,5 @@
 import { HighLatitudeRule, PrayerAdjustments, PolarCircleResolution } from 'adhan';
+import { Iqama } from 'Iqama';
 import { AsrTime } from './AsrTime';
 import { Methods } from './Methods';
 
@@ -32,6 +33,11 @@ export interface CalculationsConfig {
    * @default PolarCircleResolution.Unresolved
    * */
   polarCircleResolution?: PolarCircleResolution;
+  /**
+   * Object with waiting time (minutes) for iqama after the actual prayer time
+   * @default { fajr: 20, dhuhr: 10, asr: 10, maghrib: 5, isha: 15 }
+   * */
+  iqama?: Partial<Iqama>;
 }
 
 export interface CustomMethod {
