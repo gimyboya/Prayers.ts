@@ -6,10 +6,10 @@ export const enum Methods {
   QATAR = 'Qatar',
   EGYPTIAN = 'Egyptian', // Egyptian General Authority of Survey
   KARACHI = 'Karachi', // University of Islamic Sciences, Karachi
-  // TURKEY = 'Turkey', // Dianet
+  TURKEY = 'Turkey', // Dianet
   DUBAI = 'Dubai',
   SINGAPORE = 'Singapore',
   NORTH_AMERICA = 'NorthAmerica', // ISNA
-  // TEHRAN = 'Tehran', // Institute of Geophysics, University of Tehran
+  TEHRAN = 'Tehran', // Institute of Geophysics, University of Tehran
   // CUSTOM = 'Other',
 }

@@ -1,4 +1,4 @@
-import { HighLatitudeRule, PrayerAdjustments } from 'adhan';
+import { HighLatitudeRule, PrayerAdjustments, PolarCircleResolution } from 'adhan';
 import { AsrTime } from './AsrTime';
 import { Methods } from './Methods';
 
@@ -26,9 +26,12 @@ export interface CalculationsConfig {
    * @default AsrTime.JUMHOUR
    * */
   asrTime?: AsrTime;
-  // handle the particular cases of Midnight Sun & Polar Night days
-  // see: https://github.com/batoulapps/adhan-js/pull/30
-  // polarCircleResolution: adhan.PolarCircleResolution
+  /**
+   * handle the particular cases of Midnight Sun & Polar Night days
+   * see: https://github.com/batoulapps/adhan-js/pull/30
+   * @default PolarCircleResolution.Unresolved
+   * */
+  polarCircleResolution?: PolarCircleResolution;
 }
 
 export interface CustomMethod {

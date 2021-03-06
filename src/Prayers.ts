@@ -4,6 +4,7 @@ import {
   Coordinates,
   HighLatitudeRule,
   Madhab,
+  PolarCircleResolution,
   Prayer,
   PrayerTimes,
 } from 'adhan';
@@ -25,38 +26,39 @@ export class PrayerTimesCalculator {
 
   private _initializer(config: CalculationsConfig) {
     this._config = config;
-    const { date, latitude, longitude, ...paramsOptions } = this._config as CalculationsConfig;
+    const { date, latitude, longitude, method, ...paramsOptions } = this
+      ._config as CalculationsConfig;
     // create a coordinate object
     const coordinates = new Coordinates(latitude, longitude);
     // create calculation params based on the method name
     let calculationParams: CalculationParameters;
-    if (paramsOptions.method === Methods.UMM_AL_QURA) {
+    if (method === Methods.UMM_AL_QURA) {
       calculationParams = CalculationMethod.UmmAlQura();
-    } else if (paramsOptions.method === Methods.MUSLIM_WORLD_LEAGUE) {
+    } else if (method === Methods.MUSLIM_WORLD_LEAGUE) {
       calculationParams = CalculationMethod.MuslimWorldLeague();
-    } else if (paramsOptions.method === Methods.MOONSIGHTING_COMMITTEE) {
+    } else if (method === Methods.MOONSIGHTING_COMMITTEE) {
       calculationParams = CalculationMethod.MoonsightingCommittee();
-    } else if (paramsOptions.method === Methods.KUWAIT) {
+    } else if (method === Methods.KUWAIT) {
       calculationParams = CalculationMethod.Kuwait();
-    } else if (paramsOptions.method === Methods.QATAR) {
+    } else if (method === Methods.QATAR) {
       calculationParams = CalculationMethod.Qatar();
-    } else if (paramsOptions.method === Methods.EGYPTIAN) {
+    } else if (method === Methods.EGYPTIAN) {
       calculationParams = CalculationMethod.Egyptian();
-    } else if (paramsOptions.method === Methods.KARACHI) {
+    } else if (method === Methods.KARACHI) {
       calculationParams = CalculationMethod.Karachi();
-    } else if (paramsOptions.method === Methods.DUBAI) {
+    } else if (method === Methods.DUBAI) {
       calculationParams = CalculationMethod.Dubai();
-    } else if (paramsOptions.method === Methods.SINGAPORE) {
+    } else if (method === Methods.SINGAPORE) {
       calculationParams = CalculationMethod.Singapore();
-    } else if (paramsOptions.method === Methods.NORTH_AMERICA) {
+    } else if (method === Methods.NORTH_AMERICA) {
       calculationParams = CalculationMethod.NorthAmerica();
-      // } else if (paramsOptions.method === Methods.TEHRAN) {
-      //   calculationParams = CalculationMethod.Tehran();
-      // } else if (paramsOptions.method === Methods.TURKEY) {
-      //   calculationParams = CalculationMethod.Turkey();
-    } else if (typeof paramsOptions.method === 'object') {
+    } else if (method === Methods.TEHRAN) {
+      calculationParams = CalculationMethod.Tehran();
+    } else if (method === Methods.TURKEY) {
+      calculationParams = CalculationMethod.Turkey();
+    } else if (typeof method === 'object') {
       // if we receive an object for custom calculation method
-      calculationParams = this._pramsFromCustomMethod(paramsOptions.method);
+      calculationParams = this._pramsFromCustomMethod(method);
     } else {
       // default is umm al qura
       calculationParams = CalculationMethod.UmmAlQura();
@@ -72,6 +74,10 @@ export class PrayerTimesCalculator {
     // assigning high latitude rule
     calculationParams.highLatitudeRule =
       paramsOptions.highLatitudeRule || HighLatitudeRule.MiddleOfTheNight;
+    // assign polarCircleResolution
+    calculationParams.polarCircleResolution =
+      paramsOptions.polarCircleResolution || PolarCircleResolution.Unresolved;
+    // creating the calculation object
     this._prayerTimesCalculator = new PrayerTimes(coordinates, date, calculationParams);
   }
 
@@ -166,7 +172,7 @@ export class PrayerTimesCalculator {
             }, delay);
           }
 
-          if (tooLate && i === prayerTimesKeys.length) {
+          if (tooLate && i === prayerTimesKeys.length - 1) {
             subscriber.next(Prayer.None);
             subscriber.complete();
           }
