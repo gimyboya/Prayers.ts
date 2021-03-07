@@ -24,6 +24,8 @@ const formatter = new Formatter({
 
 console.log('calculator object', formatter.format(calculator.getAllPrayerTimes()));
 
+console.log('Qibla direction is:', calculator.getQiblaDirection());
+
 calculator.listenToAdhan().subscribe({
   next(x) {
     console.log('got value ' + x);

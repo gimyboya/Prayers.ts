@@ -7,6 +7,7 @@ import {
   PolarCircleResolution,
   Prayer,
   PrayerTimes,
+  Qibla,
   SunnahTimes,
 } from 'adhan';
 import { AsrTime } from './types/AsrTime';
@@ -151,6 +152,20 @@ export class PrayerTimesCalculator {
 
   public getLastThirdOfTheNightTime(): RawTimeObject {
     return { lastThirdOfTheNight: this._qiyamTimesCalculator.lastThirdOfTheNight };
+  }
+  /**
+   * Get the direction, in degrees from North, of the Qibla from a given set of coordinates..
+   * @param {{ latitude: number; longitude: number }} Coordinates - optionally pass latitude and longitude values
+   * @return {number} value representing the direction in degrees from North.
+   */
+  public getQiblaDirection(
+    { latitude, longitude }: { latitude: number; longitude: number } = {
+      latitude: this._config.latitude,
+      longitude: this._config.longitude,
+    }
+  ): number {
+    const coordinates = new Coordinates(latitude, longitude);
+    return Qibla(coordinates);
   }
 
   public getCalculationOptions(): CalculationsConfig {
