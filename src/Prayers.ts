@@ -7,6 +7,7 @@ import {
   PolarCircleResolution,
   Prayer,
   PrayerTimes,
+  SunnahTimes,
 } from 'adhan';
 import { AsrTime } from './types/AsrTime';
 import { Methods } from './types/Methods';
@@ -18,6 +19,7 @@ export class PrayerTimesCalculator {
   // TODO: add a proxy to the config to detect changes and react
 
   private _prayerTimesCalculator!: PrayerTimes;
+  private _qiyamTimesCalculator!: SunnahTimes;
   private _config!: CalculationsConfig;
 
   constructor(config: CalculationsConfig) {
@@ -84,6 +86,7 @@ export class PrayerTimesCalculator {
     );
     // creating the calculation object
     this._prayerTimesCalculator = new PrayerTimes(coordinates, date, calculationParams);
+    this._qiyamTimesCalculator = new SunnahTimes(this._prayerTimesCalculator);
   }
 
   private _pramsFromCustomMethod(config: CustomMethod): CalculationParameters {
@@ -142,6 +145,14 @@ export class PrayerTimesCalculator {
     return { [prayer]: this._prayerTimesCalculator.timeForPrayer(prayer) };
   }
 
+  public getMiddleOfTheNightTime(): RawTimeObject {
+    return { middleOfTheNight: this._qiyamTimesCalculator.middleOfTheNight };
+  }
+
+  public getLastThirdOfTheNightTime(): RawTimeObject {
+    return { lastThirdOfTheNight: this._qiyamTimesCalculator.lastThirdOfTheNight };
+  }
+
   public getCalculationOptions(): CalculationsConfig {
     return this._config;
   }
@@ -158,17 +169,15 @@ export class PrayerTimesCalculator {
     // we use defer to trigger the observable creation (factory) at subscription time
     return defer(() => {
       return new Observable((subscriber) => {
-        let tooLate = true;
+        let prayerTimePassed = true;
         const prayerTimesKeys = Object.keys(prayerTimes);
         const timeAtSubscription = new Date();
-        console.log('subscribing at:', timeAtSubscription.getTime());
         prayerTimesKeys.forEach((prayer, i) => {
           // calculate the delay needed to issue an prayer event starting from now
           const delay = prayerTimes[prayer].getTime() - timeAtSubscription.getTime();
           // if the delay is positive (in the future)
-          console.log(`delay for ${prayer} is: ${delay}`);
           if (delay >= 0) {
-            tooLate = false;
+            prayerTimePassed = false;
             // we create an event of the the prayer based on the delay
             setTimeout(() => {
               subscriber.next(prayer);
@@ -177,7 +186,7 @@ export class PrayerTimesCalculator {
             }, delay);
           }
 
-          if (tooLate && i === prayerTimesKeys.length - 1) {
+          if (prayerTimePassed && i === prayerTimesKeys.length - 1) {
             subscriber.next(Prayer.None);
             subscriber.complete();
           }
@@ -191,7 +200,7 @@ export class PrayerTimesCalculator {
     // we use defer to trigger the observable creation (factory) at subscription time
     return defer(() => {
       return new Observable((subscriber) => {
-        let tooLate = true;
+        let prayerTimePassed = true;
         const prayerTimesKeys = Object.keys(prayerTimes);
         const timeAtSubscription = new Date();
         prayerTimesKeys.forEach((prayer, i) => {
@@ -202,7 +211,7 @@ export class PrayerTimesCalculator {
             timeAtSubscription.getTime();
           // if the delay is positive (in the future)
           if (delay >= 0) {
-            tooLate = false;
+            prayerTimePassed = false;
             // we create an event of the the prayer based on the delay
             setTimeout(() => {
               subscriber.next(`iqama:${prayer}`);
@@ -211,11 +220,53 @@ export class PrayerTimesCalculator {
             }, delay);
           }
 
-          if (tooLate && i === prayerTimesKeys.length - 1) {
+          if (prayerTimePassed && i === prayerTimesKeys.length - 1) {
             subscriber.next(`iqama:${Prayer.None}`);
             subscriber.complete();
           }
         });
+      });
+    });
+  }
+
+  public listenToMiddleOfTheNightTime(): Observable<any> {
+    const middleOfTheNightTime = this._qiyamTimesCalculator.middleOfTheNight;
+    // we use defer to trigger the observable creation (factory) at subscription time
+    return defer(() => {
+      return new Observable((subscriber) => {
+        const timeAtSubscription = new Date();
+        // calculate the delay needed to issue a middleOfTheNight event starting from now
+        const delay = middleOfTheNightTime.getTime() - timeAtSubscription.getTime();
+        if (delay >= 0) {
+          // we create an event of the the prayer based on the delay
+          setTimeout(() => {
+            subscriber.next('middleOfTheNight');
+            subscriber.complete();
+          }, delay);
+        } else {
+          subscriber.complete();
+        }
+      });
+    });
+  }
+
+  public listenToLastThirdOfTheNightTime() {
+    const lastThirdOfTheNightTime = this._qiyamTimesCalculator.lastThirdOfTheNight;
+    // we use defer to trigger the observable creation (factory) at subscription time
+    return defer(() => {
+      return new Observable((subscriber) => {
+        const timeAtSubscription = new Date();
+        // calculate the delay needed to issue a lastThirdOfTheNight event starting from now
+        const delay = lastThirdOfTheNightTime.getTime() - timeAtSubscription.getTime();
+        if (delay >= 0) {
+          // we create an event of the the prayer based on the delay
+          setTimeout(() => {
+            subscriber.next('lastThirdOfTheNight');
+            subscriber.complete();
+          }, delay);
+        } else {
+          subscriber.complete();
+        }
       });
     });
   }
